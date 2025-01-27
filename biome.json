@@ -87,7 +87,8 @@
       "**/.turbo",
       "**/.next",
       "**/.source",
-      "__registry__"
+      "__registry__",
+      "**/src/lib/operator/dom.ts"
     ]
   }
 }

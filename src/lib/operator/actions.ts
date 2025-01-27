@@ -71,9 +71,27 @@ export async function handleKeyboardAction(
   }
 }
 
-interface RelativeCoordinates {
-  x: number; // Between 0 and 1
-  y: number; // Between 0 and 1
+async function paintDot(page: Page, x: number, y: number) {
+  await page.evaluate(
+    ({ x, y }) => {
+      const dot = document.createElement("div");
+      dot.id = "ai-dot";
+      dot.style.cssText = `
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        background-color: red;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 999999;
+        left: ${x}px;
+        top: ${y}px;
+      `;
+      document.body.appendChild(dot);
+    },
+    { x, y }
+  );
 }
 
 /**
@@ -82,41 +100,44 @@ interface RelativeCoordinates {
 export async function clickTargetOnPage(
   page: Page,
   coordinates: { x: number; y: number },
-  paint = true
+  paint = true,
+  useDot = false
 ) {
   // Convert relative coordinates to absolute pixels
   const x = Math.round(coordinates.x * viewPort.width);
   const y = Math.round(coordinates.y * viewPort.height);
 
   if (paint) {
-    // Add and position cursor first
-    await page.evaluate(() => {
-      const cursor = document.createElement("div");
-      cursor.id = "ai-cursor";
-      cursor.style.cssText = `
-        position: fixed;
-        width: 20px;
-        height: 20px;
-        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="white" stroke="black" stroke-width="1" d="M1,1 L11,11 L7,11 L9,15 L7,16 L5,12 L1,16 Z"/></svg>');
-        background-repeat: no-repeat;
-        pointer-events: none;
-        z-index: 999999;
-      `;
-      document.body.appendChild(cursor);
-    });
+    if (useDot) {
+      await paintDot(page, x, y);
+    } else {
+      // Add and position cursor first
+      await page.evaluate(() => {
+        const cursor = document.createElement("div");
+        cursor.id = "ai-cursor";
+        cursor.style.cssText = `
+          position: fixed;
+          width: 20px;
+          height: 20px;
+          background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="white" stroke="black" stroke-width="1" d="M1,1 L11,11 L7,11 L9,15 L7,16 L5,12 L1,16 Z"/></svg>');
+          background-repeat: no-repeat;
+          pointer-events: none;
+          z-index: 999999;
+        `;
+        document.body.appendChild(cursor);
+      });
 
-    await page.evaluate(
-      ({ x, y }) => {
-        const cursor = document.getElementById("ai-cursor");
-        if (cursor) {
-          cursor.style.left = `${x}px`;
-          cursor.style.top = `${y}px`;
-        }
-      },
-      { x, y }
-    );
-
-    // Add a small delay to make the cursor visible before clicking
+      await page.evaluate(
+        ({ x, y }) => {
+          const cursor = document.getElementById("ai-cursor");
+          if (cursor) {
+            cursor.style.left = `${x}px`;
+            cursor.style.top = `${y}px`;
+          }
+        },
+        { x, y }
+      );
+    }
     await sleep(500);
   }
 

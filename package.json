@@ -18,6 +18,8 @@
     "@ai-sdk/provider": "^1.0.6",
     "@browserbasehq/sdk": "^2.0.0",
     "@radix-ui/react-slot": "^1.1.1",
+    "@upstash/ratelimit": "^2.0.5",
+    "@upstash/redis": "^1.34.3",
     "ai": "^4.1.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

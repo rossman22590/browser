@@ -1,4 +1,5 @@
 import {
+  clickTargetOnPage,
   goToUrlPage,
   scrollDownPage,
   searchGooglePage,
@@ -8,12 +9,43 @@ import { getOrCreateBrowser, setSessionId } from "@/lib/operator/browser";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { streamText } from "ai";
+import { getTargetCoordinates } from "@/app/api/chat/lib/getCoordinates";
+import { ratelimit } from "@/lib/upstash/upstash";
+import { getDomStateAndHighlight } from "@/lib/operator/dom";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   const { messages, sessionId } = await req.json();
+
+  // Check if the last message is from the user
+  const lastMessage = messages[messages.length - 1];
+  if (lastMessage?.role === "user") {
+    const ip = req.headers.get("x-forwarded-for") || "anonymous";
+    const { success, limit, reset, remaining } = await ratelimit.limit(ip);
+
+    if (!success) {
+      return new Response(
+        JSON.stringify({
+          error: "Daily message limit exceeded",
+          limit,
+          reset,
+          remaining,
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+          },
+        }
+      );
+    }
+  }
+
   const model = anthropic("claude-3-5-sonnet-latest");
 
   setSessionId(sessionId);
@@ -67,7 +99,7 @@ export async function POST(req: Request) {
       - scroll: Scroll the page (optional amount parameter)
       - screenshot: Take a screenshot of the current page`,
         parameters: z.object({
-          action: z.enum(["type", "key", "scroll", "screenshot"]),
+          action: z.enum(["type", "key", "scroll", "screenshot", "click"]),
           text: z
             .string()
             .optional()
@@ -79,6 +111,12 @@ export async function POST(req: Request) {
             .optional()
             .describe(
               'Amount to scroll in pixels (optional for "scroll" action)'
+            ),
+          index: z
+            .number()
+            .optional()
+            .describe(
+              'Index of the element to click (optional for "click" action)'
             ),
         }),
         execute: async ({
@@ -118,6 +156,8 @@ export async function POST(req: Request) {
             }
 
             if (action === "screenshot") {
+              await getDomStateAndHighlight(page);
+
               const { screenshot } = await takeScreenshot(page);
               return { data: screenshot.data, mimeType: screenshot.mimeType };
             }
