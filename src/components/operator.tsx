@@ -1,5 +1,6 @@
 "use client";
 
+import { closeSession, createAndGetSessionUrl } from "@/actions/session";
 import { ChatInput } from "@/components/chat-input";
 import {
   ResizableHandle,
@@ -16,6 +17,9 @@ export function Operator() {
   const initialInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const chatInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [sessionUrl, setSessionUrl] = React.useState<string | null>(null);
+  const [sessionId, setSessionId] = React.useState<string | null>(null);
+  const hasInitializedRef = React.useRef(false);
   const [inViewRef, inView] = useInView({
     threshold: 0,
   });
@@ -25,10 +29,28 @@ export function Operator() {
       scrollRef.current = node;
       inViewRef(node);
     },
-    [inViewRef],
+    [inViewRef]
   );
 
   const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
+
+  // Update session initialization effect
+  React.useEffect(() => {
+    async function initSession() {
+      if (hasInitializedRef.current) return;
+      hasInitializedRef.current = true;
+
+      try {
+        const { url, sessionId: id } = await createAndGetSessionUrl();
+        setSessionUrl(url);
+        setSessionId(id);
+      } catch (error) {
+        console.error("Failed to initialize session:", error);
+      }
+    }
+
+    initSession();
+  }, []);
 
   // Update auto-scroll based on whether the user is viewing the bottom
   React.useEffect(() => {
@@ -42,6 +64,16 @@ export function Operator() {
       scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, shouldAutoScroll]);
+
+  const handleEndSession = async () => {
+    if (sessionId) {
+      try {
+        await closeSession(sessionId);
+      } catch (error) {
+        console.error("Failed to end session:", error);
+      }
+    }
+  };
 
   return (
     <main className="h-screen overflow-hidden">
@@ -77,7 +109,7 @@ export function Operator() {
                     key={message.id}
                     className={cn(
                       "flex w-full",
-                      message.role === "user" ? "justify-end" : "justify-start",
+                      message.role === "user" ? "justify-end" : "justify-start"
                     )}
                   >
                     <div
@@ -85,7 +117,7 @@ export function Operator() {
                         "rounded-lg px-3 py-2 shadow-sm",
                         message.role === "user"
                           ? "max-w-[80%] bg-primary text-primary-foreground"
-                          : "max-w-[80%] bg-background",
+                          : "max-w-[80%] bg-background"
                       )}
                     >
                       {message.content}
@@ -111,16 +143,35 @@ export function Operator() {
               </div>
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+
           <ResizablePanel defaultSize={70} minSize={40}>
             <div className="flex h-full flex-col p-4">
-              <h2 className="mb-4 font-semibold text-xl">Browser Panel</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-semibold text-xl">Browser Panel</h2>
+                <button
+                  onClick={handleEndSession}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                >
+                  End Session
+                </button>
+              </div>
               <div className="flex-1 rounded-lg border bg-muted/50 p-4">
-                <div className="flex h-full items-center justify-center">
-                  <p className="text-muted-foreground">
-                    Browser panel placeholder
-                  </p>
-                </div>
+                {sessionUrl ? (
+                  <iframe
+                    src={sessionUrl}
+                    className="size-full"
+                    sandbox="allow-same-origin allow-scripts allow-forms"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    title="Browser Session"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <p className="text-muted-foreground">
+                      Loading browser session...
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </ResizablePanel>

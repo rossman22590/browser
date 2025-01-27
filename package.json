@@ -14,6 +14,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.1.5",
     "@ai-sdk/provider": "^1.0.6",
+    "@browserbasehq/sdk": "^2.0.0",
     "@radix-ui/react-slot": "^1.1.1",
     "ai": "^4.1.9",
     "class-variance-authority": "^0.7.1",
