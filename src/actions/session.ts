@@ -4,7 +4,7 @@ import {
   closeBrowserSession,
   getSessionUrl,
   createSession,
-} from "@/lib/browser/session";
+} from "@/lib/operator/session";
 
 export async function createAndGetSessionUrl() {
   const session = await createSession();

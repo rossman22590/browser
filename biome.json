@@ -38,7 +38,8 @@
         "noBannedTypes": "off"
       },
       "style": {
-        "useImportType": "warn"
+        "useImportType": "warn",
+        "noNonNullAssertion": "off"
       },
       "security": {
         "noDangerouslySetInnerHtml": "off"

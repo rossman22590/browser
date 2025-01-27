@@ -9,17 +9,29 @@ import {
 } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
 import { useChat } from "ai/react";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useInView } from "react-intersection-observer";
 
 export function Operator() {
-  const { messages, input, setInput, handleSubmit, isLoading } = useChat();
   const initialInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const chatInputRef = React.useRef<HTMLTextAreaElement | null>(null);
-  const scrollRef = React.useRef<HTMLDivElement>(null);
   const [sessionUrl, setSessionUrl] = React.useState<string | null>(null);
   const [sessionId, setSessionId] = React.useState<string | null>(null);
+
+  const router = useRouter();
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
   const hasInitializedRef = React.useRef(false);
+
+  const { messages, input, setInput, handleSubmit, isLoading } = useChat({
+    body: {
+      sessionId,
+    },
+  });
+
   const [inViewRef, inView] = useInView({
     threshold: 0,
   });
@@ -69,6 +81,7 @@ export function Operator() {
     if (sessionId) {
       try {
         await closeSession(sessionId);
+        router.push("/");
       } catch (error) {
         console.error("Failed to end session:", error);
       }
@@ -103,7 +116,7 @@ export function Operator() {
           <ResizablePanel defaultSize={30} minSize={20}>
             <div className="flex h-full flex-col p-4">
               <h2 className="mb-4 font-semibold text-xl">Chat Feed</h2>
-              <div className="flex-1 space-y-4 overflow-auto rounded-lg border bg-muted/50 p-4">
+              <div className="flex-1 space-y-4 overflow-auto rounded-lg border bg-muted/50 p-4 text-sm">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -116,8 +129,8 @@ export function Operator() {
                       className={cn(
                         "rounded-lg px-3 py-2 shadow-sm",
                         message.role === "user"
-                          ? "max-w-[80%] bg-primary text-primary-foreground"
-                          : "max-w-[80%] bg-background"
+                          ? "max-w-[80%] bg-primary py-2 text-primary-foreground"
+                          : "max-w-[80%] bg-background py-4"
                       )}
                     >
                       {message.content}

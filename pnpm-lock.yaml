@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: ^1.1.5
+        version: 1.1.5(zod@3.24.1)
+      '@ai-sdk/google':
+        specifier: ^1.1.5
+        version: 1.1.5(zod@3.24.1)
       '@ai-sdk/openai':
         specifier: ^1.1.5
         version: 1.1.5(zod@3.24.1)
@@ -38,6 +44,9 @@ importers:
       openai:
         specifier: ^4.80.1
         version: 4.80.1(zod@3.24.1)
+      playwright-core:
+        specifier: ^1.50.0
+        version: 1.50.0
       react:
         specifier: ^19.0.0
         version: 19.0.0
@@ -59,6 +68,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.17(ts-node@10.9.1(@types/node@20.17.16)(typescript@5.7.3)))
+      zod:
+        specifier: ^3.24.1
+        version: 3.24.1
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.4
@@ -83,6 +95,18 @@ importers:
         version: 5.7.3
 
 packages:
+
+  '@ai-sdk/anthropic@1.1.5':
+    resolution: {integrity: sha512-HGs69t2dsHlt+c4nCeUcdx5ojXs25dH8xly88TZZoyjfiCRWjmyjQxiPHZL2ME864a+vEpQSmvn8DgvMFA4p2g==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
+
+  '@ai-sdk/google@1.1.5':
+    resolution: {integrity: sha512-hj3v7xi0Gq0KXy1w0hdm+VsNJ9HPdtJ2rEpAjy/sbhY9QTkPdoSBKgRs89Jq5ivQQnnoHumq1Q8RZW/WQq3ZKQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
 
   '@ai-sdk/openai@1.1.5':
     resolution: {integrity: sha512-pmZPeb99oWlV3PqMH5DVWtMGZgwWznInjdF0Bi4q1mKoEjomDXSYw+imvzMoSbpCrcGB9uFFTVx2VeR/jvcppg==}
@@ -873,6 +897,11 @@ packages:
     resolution: {integrity: sha512-saLsH7WeYYPiD25LDuLRRY/i+6HaPYr6G1OUlN39otzkSTxKnubR9RTxS3/Kk50s1g2JTgFwWQDQyplC5/SHZg==}
     engines: {node: '>= 6'}
 
+  playwright-core@1.50.0:
+    resolution: {integrity: sha512-CXkSSlr4JaZs2tZHI40DsZUN/NIwgaUPsyLuOAaIZp2CyF2sN5MM5NJsyB188lFSSozFxQ5fPT4qM+f0tH/6wQ==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   postcss-import@15.1.0:
     resolution: {integrity: sha512-hpr+J05B2FVYUAXHeK1YyI267J/dDDhMU6B6civm8hSY1jYJnBXxzKDKDswzJmtLHryrjhnDjqqp/49t8FALew==}
     engines: {node: '>=14.0.0'}
@@ -1195,6 +1224,18 @@ packages:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
 
 snapshots:
+
+  '@ai-sdk/anthropic@1.1.5(zod@3.24.1)':
+    dependencies:
+      '@ai-sdk/provider': 1.0.6
+      '@ai-sdk/provider-utils': 2.1.5(zod@3.24.1)
+      zod: 3.24.1
+
+  '@ai-sdk/google@1.1.5(zod@3.24.1)':
+    dependencies:
+      '@ai-sdk/provider': 1.0.6
+      '@ai-sdk/provider-utils': 2.1.5(zod@3.24.1)
+      zod: 3.24.1
 
   '@ai-sdk/openai@1.1.5(zod@3.24.1)':
     dependencies:
@@ -1872,6 +1913,8 @@ snapshots:
   pify@2.3.0: {}
 
   pirates@4.0.6: {}
+
+  playwright-core@1.50.0: {}
 
   postcss-import@15.1.0(postcss@8.5.1):
     dependencies:
