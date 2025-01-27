@@ -9,11 +9,38 @@ import {
 import { cn } from "@/lib/utils";
 import { useChat } from "ai/react";
 import * as React from "react";
+import { useInView } from "react-intersection-observer";
 
 export function Operator() {
   const { messages, input, setInput, handleSubmit, isLoading } = useChat();
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const { ref, inView } = useInView({
+    threshold: 0,
+  });
+
+  const composedRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollRef.current = node;
+      ref(node);
+    },
+    [ref]
+  );
+
+  const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
+
+  // Update auto-scroll based on whether the user is viewing the bottom
+  React.useEffect(() => {
+    setShouldAutoScroll(inView);
+  }, [inView]);
+
+  // Scroll to bottom when new messages arrive and auto-scroll is enabled
+  React.useEffect(() => {
+    if (shouldAutoScroll) {
+      scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, shouldAutoScroll]);
 
   return (
     <main className="h-screen overflow-hidden">
@@ -35,6 +62,7 @@ export function Operator() {
                 setIsSubmitted(true);
               }}
               disabled={isLoading}
+              autoFocus
             />
           </div>
         </div>
@@ -48,15 +76,23 @@ export function Operator() {
                   <div
                     key={message.id}
                     className={cn(
-                      "rounded p-3 shadow",
-                      message.role === "user"
-                        ? "ml-auto max-w-[80%] bg-primary text-primary-foreground"
-                        : "max-w-[80%] bg-background"
+                      "flex w-full",
+                      message.role === "user" ? "justify-end" : "justify-start"
                     )}
                   >
-                    {message.content}
+                    <div
+                      className={cn(
+                        "rounded-lg p-3 shadow-sm",
+                        message.role === "user"
+                          ? "max-w-[80%] bg-primary text-primary-foreground"
+                          : "max-w-[80%] bg-background"
+                      )}
+                    >
+                      {message.content}
+                    </div>
                   </div>
                 ))}
+                <div ref={composedRef} />
               </div>
               <div className="mt-4">
                 <ChatInput
@@ -70,6 +106,7 @@ export function Operator() {
                     handleSubmit(new Event("submit"));
                   }}
                   disabled={isLoading}
+                  autoFocus
                 />
               </div>
             </div>
