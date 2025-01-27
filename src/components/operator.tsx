@@ -16,16 +16,16 @@ export function Operator() {
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
-  const { ref, inView } = useInView({
+  const [inViewRef, inView] = useInView({
     threshold: 0,
   });
 
-  const composedRef = React.useCallback(
+  const composedScrollRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       scrollRef.current = node;
-      ref(node);
+      inViewRef(node);
     },
-    [ref]
+    [inViewRef],
   );
 
   const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
@@ -36,6 +36,7 @@ export function Operator() {
   }, [inView]);
 
   // Scroll to bottom when new messages arrive and auto-scroll is enabled
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   React.useEffect(() => {
     if (shouldAutoScroll) {
       scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -77,7 +78,7 @@ export function Operator() {
                     key={message.id}
                     className={cn(
                       "flex w-full",
-                      message.role === "user" ? "justify-end" : "justify-start"
+                      message.role === "user" ? "justify-end" : "justify-start",
                     )}
                   >
                     <div
@@ -85,14 +86,14 @@ export function Operator() {
                         "rounded-lg p-3 shadow-sm",
                         message.role === "user"
                           ? "max-w-[80%] bg-primary text-primary-foreground"
-                          : "max-w-[80%] bg-background"
+                          : "max-w-[80%] bg-background",
                       )}
                     >
                       {message.content}
                     </div>
                   </div>
                 ))}
-                <div ref={composedRef} />
+                <div ref={composedScrollRef} />
               </div>
               <div className="mt-4">
                 <ChatInput

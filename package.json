@@ -9,7 +9,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm lint typecheck"
+    "check": "pnpm lint && pnpm typecheck"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.1.5",

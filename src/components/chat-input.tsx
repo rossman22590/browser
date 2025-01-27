@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Send } from "lucide-react";
+import * as React from "react";
 import TextareaAutosize, {
   type TextareaAutosizeProps,
 } from "react-textarea-autosize";
-import * as React from "react";
 
 interface ChatInputProps
   extends Omit<TextareaAutosizeProps, "onChange" | "onSubmit"> {
@@ -56,7 +56,7 @@ const ChatInput = React.forwardRef<HTMLTextAreaElement, ChatInputProps>(
           ref={forwardedRef}
           className={cn(
             "flex w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            className
+            className,
           )}
           rows={1}
           value={value}
@@ -75,7 +75,7 @@ const ChatInput = React.forwardRef<HTMLTextAreaElement, ChatInputProps>(
         </Button>
       </div>
     );
-  }
+  },
 );
 
 export { ChatInput };
