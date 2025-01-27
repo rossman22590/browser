@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Operator",
+  title: "Ottogrid Operator",
   description: "Operator for the web.",
 };
 
