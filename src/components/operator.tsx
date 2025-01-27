@@ -13,8 +13,8 @@ import { useInView } from "react-intersection-observer";
 
 export function Operator() {
   const { messages, input, setInput, handleSubmit, isLoading } = useChat();
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
-  const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const initialInputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const chatInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [inViewRef, inView] = useInView({
     threshold: 0,
@@ -45,14 +45,14 @@ export function Operator() {
 
   return (
     <main className="h-screen overflow-hidden">
-      {!isSubmitted ? (
+      {messages.length === 0 ? (
         <div className="container mx-auto flex h-full flex-col items-center justify-center p-4">
           <h1 className="mb-8 text-balance font-bold text-3xl">
             Ottogrid Operator
           </h1>
           <div className="w-full max-w-2xl">
             <ChatInput
-              ref={inputRef}
+              ref={initialInputRef}
               placeholder="Type something here..."
               minRows={3}
               className="max-h-[200px] min-h-[100px] text-base"
@@ -60,7 +60,6 @@ export function Operator() {
               onValueChange={setInput}
               onSubmit={() => {
                 handleSubmit(new Event("submit"));
-                setIsSubmitted(true);
               }}
               disabled={isLoading}
               autoFocus
@@ -83,7 +82,7 @@ export function Operator() {
                   >
                     <div
                       className={cn(
-                        "rounded-lg p-3 shadow-sm",
+                        "rounded-lg px-3 py-2 shadow-sm",
                         message.role === "user"
                           ? "max-w-[80%] bg-primary text-primary-foreground"
                           : "max-w-[80%] bg-background",
@@ -97,9 +96,9 @@ export function Operator() {
               </div>
               <div className="mt-4">
                 <ChatInput
-                  ref={inputRef}
+                  ref={chatInputRef}
                   placeholder="Type something here..."
-                  minRows={2}
+                  minRows={3}
                   className="max-h-[100px] min-h-[60px] text-base"
                   value={input}
                   onValueChange={setInput}
