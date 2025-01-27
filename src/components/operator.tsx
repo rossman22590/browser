@@ -13,19 +13,21 @@ import * as React from "react";
 export function Operator() {
   const { messages, input, setInput, handleSubmit, isLoading } = useChat();
   const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
 
   return (
     <main className="h-screen overflow-hidden">
       {!isSubmitted ? (
         <div className="container mx-auto flex h-full flex-col items-center justify-center p-4">
-          <h1 className="mb-8 text-3xl text-balance font-bold">
+          <h1 className="mb-8 text-balance font-bold text-3xl">
             Ottogrid Operator
           </h1>
           <div className="w-full max-w-2xl">
             <ChatInput
+              ref={inputRef}
               placeholder="Type something here..."
               minRows={3}
-              className="min-h-[100px] max-h-[200px] text-base"
+              className="max-h-[200px] min-h-[100px] text-base"
               value={input}
               onValueChange={setInput}
               onSubmit={() => {
@@ -40,28 +42,42 @@ export function Operator() {
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={30} minSize={20}>
             <div className="flex h-full flex-col p-4">
-              <h2 className="mb-4 text-xl font-semibold">Chat Feed</h2>
-              <div className="flex-1 overflow-auto rounded-lg border bg-muted/50 p-4 space-y-4">
+              <h2 className="mb-4 font-semibold text-xl">Chat Feed</h2>
+              <div className="flex-1 space-y-4 overflow-auto rounded-lg border bg-muted/50 p-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
                     className={cn(
                       "rounded p-3 shadow",
                       message.role === "user"
-                        ? "bg-primary text-primary-foreground ml-auto max-w-[80%]"
-                        : "bg-background max-w-[80%]",
+                        ? "ml-auto max-w-[80%] bg-primary text-primary-foreground"
+                        : "max-w-[80%] bg-background"
                     )}
                   >
                     {message.content}
                   </div>
                 ))}
               </div>
+              <div className="mt-4">
+                <ChatInput
+                  ref={inputRef}
+                  placeholder="Type something here..."
+                  minRows={2}
+                  className="max-h-[100px] min-h-[60px] text-base"
+                  value={input}
+                  onValueChange={setInput}
+                  onSubmit={() => {
+                    handleSubmit(new Event("submit"));
+                  }}
+                  disabled={isLoading}
+                />
+              </div>
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70} minSize={40}>
             <div className="flex h-full flex-col p-4">
-              <h2 className="mb-4 text-xl font-semibold">Browser Panel</h2>
+              <h2 className="mb-4 font-semibold text-xl">Browser Panel</h2>
               <div className="flex-1 rounded-lg border bg-muted/50 p-4">
                 <div className="flex h-full items-center justify-center">
                   <p className="text-muted-foreground">
