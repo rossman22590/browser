@@ -6,19 +6,13 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { useChat } from "ai/react";
+import * as React from "react";
 
 export function Operator() {
-  const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  async function onSubmit(value: string) {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    setIsSubmitted(true);
-  }
+  const { messages, input, setInput, handleSubmit, isLoading } = useChat();
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
 
   return (
     <main className="h-screen overflow-hidden">
@@ -31,10 +25,13 @@ export function Operator() {
             <ChatInput
               placeholder="Type something here..."
               minRows={3}
-              className="min-h-[100px] text-base"
-              value={message}
-              onValueChange={(value) => setMessage(value)}
-              onSubmit={onSubmit}
+              className="min-h-[100px] max-h-[200px] text-base"
+              value={input}
+              onValueChange={setInput}
+              onSubmit={() => {
+                handleSubmit(new Event("submit"));
+                setIsSubmitted(true);
+              }}
               disabled={isLoading}
             />
           </div>
@@ -44,10 +41,20 @@ export function Operator() {
           <ResizablePanel defaultSize={30} minSize={20}>
             <div className="flex h-full flex-col p-4">
               <h2 className="mb-4 text-xl font-semibold">Chat Feed</h2>
-              <div className="flex-1 overflow-auto rounded-lg border bg-muted/50 p-4">
-                <div className="rounded bg-background p-3 shadow">
-                  {message}
-                </div>
+              <div className="flex-1 overflow-auto rounded-lg border bg-muted/50 p-4 space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      "rounded p-3 shadow",
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground ml-auto max-w-[80%]"
+                        : "bg-background max-w-[80%]",
+                    )}
+                  >
+                    {message.content}
+                  </div>
+                ))}
               </div>
             </div>
           </ResizablePanel>
