@@ -1,11 +1,11 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Send } from "lucide-react";
 import TextareaAutosize, {
-  TextareaAutosizeProps,
+  type TextareaAutosizeProps,
 } from "react-textarea-autosize";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 interface ChatInputProps
   extends Omit<TextareaAutosizeProps, "onChange" | "onSubmit"> {
@@ -51,7 +51,7 @@ export function ChatInput({
       <TextareaAutosize
         className={cn(
           "flex w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-10",
-          className
+          className,
         )}
         rows={1}
         value={value}
