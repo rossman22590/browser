@@ -8,9 +8,17 @@ import { getOrCreateBrowser, setSessionId } from "@/lib/operator/browser";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { streamText } from "ai";
-import { clickElementByVision } from "@/app/api/chat/lib/vision";
+import {
+  clickElementByIndex,
+  clickElementByVision,
+  viewAllClickableElements,
+} from "@/app/api/chat/lib/vision";
 import { ratelimit } from "@/lib/upstash/upstash";
-import { systemPrompt } from "@/app/api/chat/lib/prompts";
+import {
+  clickableElementsPrompt,
+  systemPrompt,
+} from "@/app/api/chat/lib/prompts";
+import { sleep } from "@/lib/utils";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -52,7 +60,7 @@ export async function POST(req: Request) {
   const result = streamText({
     model,
     messages,
-    system: systemPrompt,
+    system: clickableElementsPrompt,
     maxSteps: 25,
     tools: {
       searchGoogle: {
@@ -139,6 +147,25 @@ export async function POST(req: Request) {
             : [{ type: "image", data: result.data, mimeType: result.mimeType }];
         },
       },
+      viewAllClickableElements: {
+        name: "viewAllClickableElements",
+        description:
+          "Highlight all clickable elements on the page with indexs and bounding boxes. Use this to see what you can click on the page, then select the index of the element you want to click.",
+        parameters: z.object({}),
+        execute: async () => {
+          const { page } = await getOrCreateBrowser();
+          const elements = await viewAllClickableElements(page);
+          return {
+            data: elements.screenshot.data,
+            mimeType: elements.screenshot.mimeType,
+          };
+        },
+        experimental_toToolResultContent(result) {
+          return [
+            { type: "image", data: result.data, mimeType: result.mimeType },
+          ];
+        },
+      },
       browserAction: {
         name: "browserAction",
         description: `Perform browser actions like keyboard input, clicking, scrolling, and screenshots.
@@ -149,7 +176,14 @@ export async function POST(req: Request) {
       - screenshot: Take a screenshot of the current page
       - click: Click on elements using natural language description`,
         parameters: z.object({
-          action: z.enum(["type", "key", "scroll", "screenshot", "click"]),
+          action: z.enum([
+            "type",
+            "key",
+            "scroll",
+            "screenshot",
+            "click",
+            "wait",
+          ]),
           text: z
             .string()
             .optional()
@@ -162,14 +196,26 @@ export async function POST(req: Request) {
             .describe(
               'Amount to scroll in pixels. Use -1 to scroll to bottom of page (optional for "scroll" action)'
             ),
-          clickObject: z
-            .string()
+          clickIndex: z
+            .number()
             .optional()
             .describe(
-              'The object to click. Use natural language and be as specific as possible, e.g. "the blue Submit button", "the link that says Learn More", "the search icon in the top right"'
+              "The index of the element to click. Use this when you have a list of clickable elements and you want to click a specific one."
             ),
+          wait: z
+            .number()
+            .optional()
+            .describe(
+              "The amount of time to wait in milliseconds (optional for 'wait' action). Max 10,000ms (10 seconds)"
+            ),
+          // clickObject: z
+          //   .string()
+          //   .optional()
+          //   .describe(
+          //     'The object to click. Use natural language and be as specific as possible, e.g. "the blue Submit button", "the link that says Learn More", "the search icon in the top right"'
+          //   ),
         }),
-        execute: async ({ action, text, amount, clickObject }) => {
+        execute: async ({ action, text, amount, clickIndex, wait }) => {
           try {
             const { page } = await getOrCreateBrowser();
 
@@ -180,7 +226,7 @@ export async function POST(req: Request) {
               await page.keyboard.type(text, { delay: TYPING_DELAY });
               await page.waitForTimeout(50);
               await page.keyboard.press("Enter");
-              // return `Successfully typed text: ${text} and submitted`;
+
               const { screenshot } = await takeScreenshot(page);
               return {
                 data: screenshot.data,
@@ -197,16 +243,25 @@ export async function POST(req: Request) {
                 mimeType: screenshot.mimeType,
               };
             }
-
-            if (action === "click") {
-              if (!clickObject)
-                return "Click object parameter required for click action";
-              const result = await clickElementByVision(page, clickObject);
+            if (action === "wait") {
+              if (!wait) return "Wait parameter required for wait action";
+              await sleep(wait);
               const { screenshot } = await takeScreenshot(page);
               return {
                 data: screenshot.data,
                 mimeType: screenshot.mimeType,
-                text: JSON.stringify(result, null, 2),
+              };
+            }
+
+            if (action === "click") {
+              if (!clickIndex)
+                return "Click index parameter required for click action";
+              const result = await clickElementByIndex(page, clickIndex);
+              if (typeof result === "string") return result;
+              const { screenshot } = await takeScreenshot(page);
+              return {
+                data: screenshot.data,
+                mimeType: screenshot.mimeType,
               };
             }
 

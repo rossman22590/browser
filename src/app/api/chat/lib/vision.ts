@@ -66,6 +66,22 @@ export async function getTargetCoordinates(
   };
 }
 
+export async function viewAllClickableElements(page: Page) {
+  const { domState, rawDom } = await getDomState(page, true);
+  await highlightDomElements(page, rawDom);
+  const { screenshot } = await takeScreenshot(page);
+  await clearDomHighlights(page);
+  return {
+    screenshot,
+    domState,
+  };
+}
+export async function clickElementByIndex(page: Page, index: number) {
+  const { domState, rawDom } = await getDomState(page, true);
+  const result = await clickElementByHighlightIndex(page, domState, index);
+  return result;
+}
+
 /**
  * Gets the element to click based on a natural language instruction
  */

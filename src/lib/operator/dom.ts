@@ -429,26 +429,21 @@ export async function clickElementByHighlightIndex(
   page: Page,
   domState: DOMState,
   highlightIndex: number
-): Promise<boolean> {
+) {
   const elemNode = domState.selectorMap[highlightIndex];
   if (!elemNode) {
-    console.warn(`No element found for highlightIndex=${highlightIndex}`);
-    return false;
+    return `No element found for highlightIndex=${highlightIndex}`;
   }
 
   const xpath = elemNode.xpath;
   if (!xpath) {
-    console.warn(`Node has no xpath for highlightIndex=${highlightIndex}`);
-    return false;
+    return `Node has no xpath for highlightIndex=${highlightIndex}`;
   }
 
   const locator = page.locator(`xpath=${xpath}`);
   const count = await locator.count();
   if (count < 1) {
-    console.warn(
-      `Element not found in DOM for highlightIndex=${highlightIndex}, xpath=${xpath}`
-    );
-    return false;
+    return `Element not found in DOM for highlightIndex=${highlightIndex}, xpath=${xpath}`;
   }
 
   await locator.first().click();

@@ -29,7 +29,10 @@ export async function scrollDownPage(page: Page, amount?: number) {
  */
 export async function goToUrlPage(page: Page, url: string) {
   const urlToGoTo = url.startsWith("http") ? url : `https://${url}`;
-  await page.goto(urlToGoTo);
+  await page.goto(urlToGoTo, {
+    waitUntil: "commit",
+    timeout: 25000,
+  });
   return `Navigated to ${urlToGoTo}`;
 }
 
