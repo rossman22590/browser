@@ -82,3 +82,9 @@
     scrollbar-color: hsl(var(--border)) transparent;
   }
 }
+
+@layer utilities {
+  .container {
+    @apply px-4;
+  }
+}
