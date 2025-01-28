@@ -5,14 +5,21 @@ import { sleep } from "@/lib/utils";
 import type { Page } from "playwright-core";
 
 export async function scrollDownPage(page: Page, amount?: number) {
-  if (amount && amount > 0) {
-    await page.evaluate((amt: number) => {
-      // Simple approach without explicit window typing
-      window.scrollBy(0, amt);
-    }, amount);
-    return `Scrolled down ${amount}px.`;
+  if (amount !== undefined) {
+    if (amount > 0) {
+      await page.evaluate((amt: number) => {
+        // Simple approach without explicit window typing
+        window.scrollBy(0, amt);
+      }, amount);
+      return `Scrolled down ${amount}px.`;
+    }
+    // Negative amount - scroll to bottom
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+    return "Scrolled to bottom of page.";
   }
-  // fallback: pageDown
+  // No amount specified - use PageDown (original behavior)
   await page.keyboard.press("PageDown");
   return "Scrolled down one page.";
 }
@@ -145,4 +152,53 @@ export async function clickTargetOnPage(
   await page.mouse.move(x, y);
   await page.mouse.click(x, y);
   return `Clicked at coordinates: ${x}, ${y}`;
+}
+
+/**
+ * Opens a new tab and returns its page object
+ */
+export async function openNewTab(page: Page) {
+  const context = page.context();
+  const newPage = await context.newPage();
+  return {
+    message: "Opened new tab",
+    newPage,
+  };
+}
+
+/**
+ * Switches to a specific tab by index (0-based)
+ */
+export async function switchToTab(page: Page, index: number) {
+  const context = page.context();
+  const pages = context.pages();
+
+  if (index < 0 || index >= pages.length) {
+    throw new Error(
+      `Tab index ${index} is out of bounds (0-${pages.length - 1})`
+    );
+  }
+
+  const targetPage = pages[index];
+  await targetPage.bringToFront();
+  return {
+    message: `Switched to tab ${index}`,
+    page: targetPage,
+  };
+}
+
+/**
+ * Navigates back in browser history
+ */
+export async function goBack(page: Page) {
+  await page.goBack();
+  return "Navigated back";
+}
+
+/**
+ * Navigates forward in browser history
+ */
+export async function goForward(page: Page) {
+  await page.goForward();
+  return "Navigated forward";
 }

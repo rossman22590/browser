@@ -1,5 +1,4 @@
 import {
-  clickTargetOnPage,
   goToUrlPage,
   scrollDownPage,
   searchGooglePage,
@@ -9,9 +8,9 @@ import { getOrCreateBrowser, setSessionId } from "@/lib/operator/browser";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { streamText } from "ai";
-import { getTargetCoordinates } from "@/app/api/chat/lib/getCoordinates";
+import { clickElementByVision } from "@/app/api/chat/lib/vision";
 import { ratelimit } from "@/lib/upstash/upstash";
-import { getDomStateAndHighlight } from "@/lib/operator/dom";
+import { systemPrompt } from "@/app/api/chat/lib/prompts";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -21,7 +20,7 @@ export async function POST(req: Request) {
 
   // Check if the last message is from the user
   const lastMessage = messages[messages.length - 1];
-  if (lastMessage?.role === "user") {
+  if (lastMessage?.role === "user" && process.env.NODE_ENV !== "development") {
     const ip = req.headers.get("x-forwarded-for") || "anonymous";
     const { success, limit, reset, remaining } = await ratelimit.limit(ip);
 
@@ -53,8 +52,8 @@ export async function POST(req: Request) {
   const result = streamText({
     model,
     messages,
-    system: "You are a helpful assistant.",
-    maxSteps: 10,
+    system: systemPrompt,
+    maxSteps: 25,
     tools: {
       searchGoogle: {
         name: "searchGoogle",
@@ -64,30 +63,80 @@ export async function POST(req: Request) {
         execute: async ({ query }: { query: string }) => {
           try {
             const { page } = await getOrCreateBrowser();
-            const msg = await searchGooglePage(page, query);
-            return msg;
+            await searchGooglePage(page, query);
+            const { screenshot } = await takeScreenshot(page);
+            return {
+              data: screenshot.data,
+              mimeType: screenshot.mimeType,
+            };
           } catch (error) {
             return `Error searching Google: ${
               error instanceof Error ? error.message : String(error)
             }`;
           }
         },
+        experimental_toToolResultContent(result) {
+          return typeof result === "string"
+            ? [{ type: "text", text: result }]
+            : [{ type: "image", data: result.data, mimeType: result.mimeType }];
+        },
       },
-      goToUrl: {
-        name: "goToUrl",
-        description:
-          'Navigate the current page to a specified URL, i.e. "goToUrl(url=...)"',
-        parameters: z.object({ url: z.string() }),
-        execute: async ({ url }: { url: string }) => {
+      navigate: {
+        name: "navigate",
+        description: `Navigate in the browser. Available actions:
+          - url: Navigate to a specific URL (requires url parameter)
+          - back: Go back one page in history
+          - forward: Go forward one page in history`,
+        parameters: z.object({
+          action: z.enum(["url", "back", "forward"]),
+          url: z
+            .string()
+            .optional()
+            .describe("URL to navigate to (required for url action)"),
+        }),
+        execute: async ({
+          action,
+          url,
+        }: {
+          action: "url" | "back" | "forward";
+          url?: string;
+        }) => {
           try {
             const { page } = await getOrCreateBrowser();
-            const msg = await goToUrlPage(page, url);
-            return msg;
+            let text = "";
+
+            if (action === "url") {
+              if (!url) {
+                throw new Error("URL parameter required for url action");
+              }
+              const urlToGoTo = url.startsWith("http") ? url : `https://${url}`;
+              await page.goto(urlToGoTo);
+              text = `Navigated to ${urlToGoTo}`;
+            } else if (action === "back") {
+              await page.goBack();
+              text = "Navigated back one page";
+            } else if (action === "forward") {
+              await page.goForward();
+              text = "Navigated forward one page";
+            } else {
+              throw new Error(`Unknown navigation action: ${action}`);
+            }
+
+            const { screenshot } = await takeScreenshot(page);
+            return {
+              data: screenshot.data,
+              mimeType: screenshot.mimeType,
+            };
           } catch (error) {
-            return `Error navigating to URL: ${
+            return `Error navigating: ${
               error instanceof Error ? error.message : String(error)
             }`;
           }
+        },
+        experimental_toToolResultContent(result) {
+          return typeof result === "string"
+            ? [{ type: "text", text: result }]
+            : [{ type: "image", data: result.data, mimeType: result.mimeType }];
         },
       },
       browserAction: {
@@ -96,8 +145,9 @@ export async function POST(req: Request) {
       Available actions:
       - type: Type text (requires text parameter)
       - key: Press a specific key (requires text parameter, e.g. "Enter", "Tab", "ArrowDown")
-      - scroll: Scroll the page (optional amount parameter)
-      - screenshot: Take a screenshot of the current page`,
+      - scroll: Scroll the page (optional amount parameter, use -1 to scroll to bottom)
+      - screenshot: Take a screenshot of the current page
+      - click: Click on elements using natural language description`,
         parameters: z.object({
           action: z.enum(["type", "key", "scroll", "screenshot", "click"]),
           text: z
@@ -110,24 +160,16 @@ export async function POST(req: Request) {
             .number()
             .optional()
             .describe(
-              'Amount to scroll in pixels (optional for "scroll" action)'
+              'Amount to scroll in pixels. Use -1 to scroll to bottom of page (optional for "scroll" action)'
             ),
-          index: z
-            .number()
+          clickObject: z
+            .string()
             .optional()
             .describe(
-              'Index of the element to click (optional for "click" action)'
+              'The object to click. Use natural language and be as specific as possible, e.g. "the blue Submit button", "the link that says Learn More", "the search icon in the top right"'
             ),
         }),
-        execute: async ({
-          action,
-          text,
-          amount,
-        }: {
-          action: "type" | "key" | "scroll" | "screenshot";
-          text?: string;
-          amount?: number;
-        }) => {
+        execute: async ({ action, text, amount, clickObject }) => {
           try {
             const { page } = await getOrCreateBrowser();
 
@@ -138,27 +180,48 @@ export async function POST(req: Request) {
               await page.keyboard.type(text, { delay: TYPING_DELAY });
               await page.waitForTimeout(50);
               await page.keyboard.press("Enter");
-              return `Successfully typed text: ${text} and submitted`;
+              // return `Successfully typed text: ${text} and submitted`;
+              const { screenshot } = await takeScreenshot(page);
+              return {
+                data: screenshot.data,
+                mimeType: screenshot.mimeType,
+              };
             }
 
             if (action === "key") {
-              if (!text)
-                throw new Error("Text parameter required for key action");
+              if (!text) return "Text parameter required for key action";
               await page.keyboard.press(text);
-              return `Successfully pressed key: ${text}`;
+              const { screenshot } = await takeScreenshot(page);
+              return {
+                data: screenshot.data,
+                mimeType: screenshot.mimeType,
+              };
+            }
+
+            if (action === "click") {
+              if (!clickObject)
+                return "Click object parameter required for click action";
+              await clickElementByVision(page, clickObject);
+              // return `Successfully clicked element: ${clickObject}`;
+              const { screenshot } = await takeScreenshot(page);
+              return {
+                data: screenshot.data,
+                mimeType: screenshot.mimeType,
+              };
             }
 
             if (action === "scroll") {
               await scrollDownPage(page, amount);
-              return `Successfully scrolled ${
-                amount ? `${amount}px` : "one page"
-              }`;
+              const { screenshot } = await takeScreenshot(page);
+              return {
+                data: screenshot.data,
+                mimeType: screenshot.mimeType,
+              };
             }
 
             if (action === "screenshot") {
-              await getDomStateAndHighlight(page);
-
               const { screenshot } = await takeScreenshot(page);
+
               return { data: screenshot.data, mimeType: screenshot.mimeType };
             }
 

@@ -88,7 +88,8 @@
       "**/.next",
       "**/.source",
       "__registry__",
-      "**/src/lib/operator/dom.ts"
+      "**/src/lib/operator/dom.ts",
+      "**/src/app/api/chat/lib/script.js"
     ]
   }
 }
