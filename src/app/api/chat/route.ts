@@ -21,7 +21,7 @@ import {
 import { sleep } from "@/lib/utils";
 
 // Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
+export const maxDuration = 120;
 
 export async function POST(req: Request) {
   const { messages, sessionId } = await req.json();
