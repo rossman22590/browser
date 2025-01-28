@@ -55,7 +55,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
       animate={{ opacity: 1, y: 0 }}
       className={cn(
         "flex w-full",
-        message.role === "user" ? "justify-end" : "justify-start",
+        message.role === "user" ? "justify-end" : "justify-start"
       )}
     >
       <div
@@ -63,13 +63,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
           "rounded-lg w-full px-3 py-2 shadow-sm",
           message.role === "user"
             ? "max-w-[80%] bg-primary text-primary-foreground"
-            : "bg-background",
+            : "bg-background"
         )}
       >
-        <div className="prose break-words dark:prose-invert">
+        <div className="prose dark:prose-invert break-words">
           {message.content}
         </div>
-        {message.role === "assistant" && message.status && (
+        {/* {message.role === "assistant" && message.status && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -85,14 +85,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 {message.status.content === "initialized"
                   ? "Initializing..."
                   : message.status.content === "step_complete"
-                    ? `Step ${message.status.step} completed`
-                    : message.status.content === "finished"
-                      ? "Finished"
-                      : message.status.content}
+                  ? `Step ${message.status.step} completed`
+                  : message.status.content === "finished"
+                  ? "Finished"
+                  : message.status.content}
               </span>
             </motion.div>
           </motion.div>
-        )}
+        )} */}
         {message.role === "assistant" &&
           message.toolInvocations &&
           message.toolInvocations.length > 0 && (
@@ -109,10 +109,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     key={toolCallId}
                     initial={{ scale: 0.95 }}
                     animate={{ scale: 1 }}
-                    className="flex flex-col w-full gap-2 rounded-md border bg-muted/50 px-3 py-2"
+                    className="flex w-full flex-col gap-2 rounded-md border bg-muted/50 px-3 py-2"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center rounded-full p-1.5 border gap-2">
+                      <div className="flex items-center gap-2 rounded-full border p-1.5">
                         {getToolIcon(toolName)}
                       </div>
                       <span className="font-medium">
@@ -121,7 +121,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                           .replace(/^./, (str) => str.toUpperCase())}
                       </span>
                       {state === "partial-call" && (
-                        <Loader2 className="h-3 w-3 animate-spin ml-auto" />
+                        <Loader2 className="ml-auto h-3 w-3 animate-spin" />
                       )}
                     </div>
                   </motion.div>

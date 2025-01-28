@@ -25,6 +25,7 @@ export async function createSession() {
       },
       viewport: viewPort,
     },
+    keepAlive: true,
   });
   return session;
 }

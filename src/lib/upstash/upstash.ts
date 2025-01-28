@@ -7,8 +7,8 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-// Create a new ratelimiter, that allows 10 requests per day
+// Max 4 messages per 8 hours
 export const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.fixedWindow(10, "24 h"),
+  limiter: Ratelimit.fixedWindow(4, "8 h"),
 });

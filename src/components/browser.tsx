@@ -18,11 +18,12 @@ export function Browser() {
   const [sessionId, setSessionId] = React.useState<string | null>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
 
-  const { messages, input, setInput, handleSubmit, isLoading, data } = useChat({
-    body: {
-      sessionId,
-    },
-  });
+  const { messages, input, setInput, handleSubmit, isLoading, data, append } =
+    useChat({
+      body: {
+        sessionId,
+      },
+    });
 
   const [inViewRef, inView] = useInView({
     threshold: 0,
@@ -33,7 +34,7 @@ export function Browser() {
       scrollRef.current = node;
       inViewRef(node);
     },
-    [inViewRef],
+    [inViewRef]
   );
 
   // Transform messages to include status
@@ -92,11 +93,20 @@ export function Browser() {
     if (sessionId) {
       try {
         await closeSession(sessionId);
+        setSessionId(null);
+        setSessionUrl(null);
         window.location.reload();
       } catch (error) {
         console.error("Failed to end session:", error);
       }
     }
+  };
+
+  const handleExampleClick = (prompt: string) => {
+    append({
+      content: prompt,
+      role: "user",
+    });
   };
 
   return (
@@ -134,6 +144,54 @@ export function Browser() {
                 disabled={isLoading}
                 autoFocus
               />
+              <div className="mt-8">
+                <p className="text-center text-muted-foreground mb-4">
+                  Or try one of these examples:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    onClick={() =>
+                      handleExampleClick(
+                        "Find me the best-rated Italian restaurants in New York City with outdoor seating"
+                      )
+                    }
+                    className="p-4 text-sm rounded-lg border bg-muted/50 hover:bg-muted text-left transition-colors"
+                  >
+                    🍝 Find top-rated Italian restaurants in NYC with outdoor
+                    seating
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleExampleClick(
+                        "Research and compare the latest iPhone models and their key features"
+                      )
+                    }
+                    className="p-4 text-sm rounded-lg border bg-muted/50 hover:bg-muted text-left transition-colors"
+                  >
+                    📱 Compare latest iPhone models and features
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleExampleClick(
+                        "Find the best deals on round-trip flights from London to Tokyo for next month"
+                      )
+                    }
+                    className="p-4 text-sm rounded-lg border bg-muted/50 hover:bg-muted text-left transition-colors"
+                  >
+                    ✈️ Search for London to Tokyo flight deals
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleExampleClick(
+                        "Research and summarize recent breakthroughs in renewable energy technology"
+                      )
+                    }
+                    className="p-4 text-sm rounded-lg border bg-muted/50 hover:bg-muted text-left transition-colors"
+                  >
+                    🌱 Explore recent renewable energy innovations
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         ) : (

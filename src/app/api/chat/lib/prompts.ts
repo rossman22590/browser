@@ -1,3 +1,5 @@
+import { CoreMessage } from "ai";
+
 export const systemPrompt = `You are a browser automation agent.
 You have these tools: searchGoogle, navigate, takeScreenshot, clickTarget, scrollDown, keyboardAction
 Your job is to execute actions automatically on the browser.
@@ -73,3 +75,17 @@ Note: avoid doing multiple actions at the same time. Execute actions one at a ti
 Try to use the various input fields like search bars on webapps to search for things. If you get stuck you can use the searchGoogle tool.
 
 Note: today's date is ${new Date().toISOString().split("T")[0]}.`;
+
+export function getCachedMessages(messages: CoreMessage[]) {
+  const systemMessage: CoreMessage = {
+    role: "system",
+    content: systemPrompt,
+    experimental_providerMetadata: {
+      anthropic: { cacheControl: { type: "ephemeral" } },
+    },
+  };
+
+  const cachedMessages = [systemMessage, ...messages];
+
+  return cachedMessages;
+}

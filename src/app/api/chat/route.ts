@@ -1,4 +1,7 @@
-import { clickableElementsPrompt } from "@/app/api/chat/lib/prompts";
+import {
+  clickableElementsPrompt,
+  getCachedMessages,
+} from "@/app/api/chat/lib/prompts";
 import {
   clickElementByIndex,
   viewAllClickableElements,
@@ -9,10 +12,15 @@ import {
   takeScreenshot,
 } from "@/lib/operator/actions";
 import { getOrCreateBrowser, setSessionId } from "@/lib/operator/browser";
+import { highlightDomElements } from "@/lib/operator/dom";
 import { ratelimit } from "@/lib/upstash/upstash";
 import { sleep } from "@/lib/utils";
 import { anthropic } from "@ai-sdk/anthropic";
-import { createDataStreamResponse, streamText } from "ai";
+import {
+  convertToCoreMessages,
+  createDataStreamResponse,
+  streamText,
+} from "ai";
 import { z } from "zod";
 
 // Allow streaming responses up to 30 seconds
@@ -43,7 +51,7 @@ export async function POST(req: Request) {
             "X-RateLimit-Remaining": remaining.toString(),
             "X-RateLimit-Reset": reset.toString(),
           },
-        },
+        }
       );
     }
   }
@@ -51,22 +59,17 @@ export async function POST(req: Request) {
   const model = anthropic("claude-3-5-sonnet-latest");
 
   setSessionId(sessionId);
+  // Write initial state
+  let stepCount = 0;
 
+  const coreMessages = convertToCoreMessages(messages);
+  const cachedMessages = getCachedMessages(coreMessages);
   return createDataStreamResponse({
     execute: async (dataStream) => {
-      // Write initial state
-      let stepCount = 0;
-      dataStream.writeData({
-        type: "status",
-        content: "initialized",
-        step: stepCount,
-      });
-
       const result = streamText({
         model,
-        messages,
-        system: clickableElementsPrompt,
-        maxSteps: 25,
+        messages: cachedMessages,
+        maxSteps: 15,
         onStepFinish: async (stepResult) => {
           stepCount++;
           dataStream.writeData({
@@ -75,6 +78,7 @@ export async function POST(req: Request) {
             step: stepCount,
           });
         },
+
         onFinish: async (result) => {
           if (result.finishReason === "stop") {
             dataStream.writeData({
@@ -220,25 +224,25 @@ export async function POST(req: Request) {
                 .string()
                 .optional()
                 .describe(
-                  'Text to type or key to press (required for "type" and "key" actions)',
+                  'Text to type or key to press (required for "type" and "key" actions)'
                 ),
               amount: z
                 .number()
                 .optional()
                 .describe(
-                  'Amount to scroll in pixels. Use -1 to scroll to bottom of page (optional for "scroll" action)',
+                  'Amount to scroll in pixels. Use -1 to scroll to bottom of page (optional for "scroll" action)'
                 ),
               clickIndex: z
                 .number()
                 .optional()
                 .describe(
-                  "The index of the element to click. Use this when you have a list of clickable elements and you want to click a specific one.",
+                  "The index of the element to click. Use this when you have a list of clickable elements and you want to click a specific one."
                 ),
               wait: z
                 .number()
                 .optional()
                 .describe(
-                  "The amount of time to wait in milliseconds (optional for 'wait' action). Max 10,000ms (10 seconds)",
+                  "The amount of time to wait in milliseconds (optional for 'wait' action). Max 10,000ms (10 seconds)"
                 ),
               // clickObject: z
               //   .string()
@@ -290,7 +294,7 @@ export async function POST(req: Request) {
                     return "Click index parameter required for click action";
                   const result = await clickElementByIndex(page, clickIndex);
                   if (typeof result === "string") return result;
-                  const { screenshot } = await takeScreenshot(page);
+                  const { screenshot } = await viewAllClickableElements(page);
                   return {
                     data: screenshot.data,
                     mimeType: screenshot.mimeType,
