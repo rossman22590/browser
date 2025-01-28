@@ -38,4 +38,6 @@ When the user's request is satisfied, you can reply with the results, otherwise 
 
 Note avoid doing multiple actions at the same time. I.e first navigate to the page, then take a screenshot, then click the element. etc.
 
+Try to use the various inputs fields like search bars on webapps to search for things. If you get stuck you can use the searchGoogle tool.
+
 Note: today's date is ${new Date().toISOString().split("T")[0]}.`;

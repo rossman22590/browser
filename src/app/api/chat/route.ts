@@ -202,7 +202,6 @@ export async function POST(req: Request) {
               if (!clickObject)
                 return "Click object parameter required for click action";
               const result = await clickElementByVision(page, clickObject);
-              // return `Successfully clicked element: ${clickObject}`;
               const { screenshot } = await takeScreenshot(page);
               return {
                 data: screenshot.data,
