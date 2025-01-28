@@ -41,7 +41,7 @@ export async function goToUrlPage(page: Page, url: string) {
  */
 export async function searchGooglePage(page: Page, query: string) {
   const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(
-    query
+    query,
   )}`;
   await page.goto(googleUrl);
   return `Searched Google for "${query}".`;
@@ -64,7 +64,7 @@ export async function takeScreenshot(page: Page) {
 export async function handleKeyboardAction(
   page: Page,
   action: "key" | "type",
-  text?: string
+  text?: string,
 ) {
   if (!text) throw new Error("Text required for keyboard actions");
 
@@ -100,7 +100,7 @@ async function paintDot(page: Page, x: number, y: number) {
       `;
       document.body.appendChild(dot);
     },
-    { x, y }
+    { x, y },
   );
 }
 
@@ -111,7 +111,7 @@ export async function clickTargetOnPage(
   page: Page,
   coordinates: { x: number; y: number },
   paint = true,
-  useDot = false
+  useDot = false,
 ) {
   // Convert relative coordinates to absolute pixels
   const x = Math.round(coordinates.x * viewPort.width);
@@ -145,7 +145,7 @@ export async function clickTargetOnPage(
             cursor.style.top = `${y}px`;
           }
         },
-        { x, y }
+        { x, y },
       );
     }
     await sleep(500);
@@ -178,7 +178,7 @@ export async function switchToTab(page: Page, index: number) {
 
   if (index < 0 || index >= pages.length) {
     throw new Error(
-      `Tab index ${index} is out of bounds (0-${pages.length - 1})`
+      `Tab index ${index} is out of bounds (0-${pages.length - 1})`,
     );
   }
 

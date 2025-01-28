@@ -2,8 +2,8 @@
 
 import {
   closeBrowserSession,
-  getSessionUrl,
   createSession,
+  getSessionUrl,
 } from "@/lib/operator/session";
 
 export async function createAndGetSessionUrl() {

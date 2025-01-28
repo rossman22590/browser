@@ -43,7 +43,7 @@ export async function POST(req: Request) {
             "X-RateLimit-Remaining": remaining.toString(),
             "X-RateLimit-Reset": reset.toString(),
           },
-        }
+        },
       );
     }
   }
@@ -220,25 +220,25 @@ export async function POST(req: Request) {
                 .string()
                 .optional()
                 .describe(
-                  'Text to type or key to press (required for "type" and "key" actions)'
+                  'Text to type or key to press (required for "type" and "key" actions)',
                 ),
               amount: z
                 .number()
                 .optional()
                 .describe(
-                  'Amount to scroll in pixels. Use -1 to scroll to bottom of page (optional for "scroll" action)'
+                  'Amount to scroll in pixels. Use -1 to scroll to bottom of page (optional for "scroll" action)',
                 ),
               clickIndex: z
                 .number()
                 .optional()
                 .describe(
-                  "The index of the element to click. Use this when you have a list of clickable elements and you want to click a specific one."
+                  "The index of the element to click. Use this when you have a list of clickable elements and you want to click a specific one.",
                 ),
               wait: z
                 .number()
                 .optional()
                 .describe(
-                  "The amount of time to wait in milliseconds (optional for 'wait' action). Max 10,000ms (10 seconds)"
+                  "The amount of time to wait in milliseconds (optional for 'wait' action). Max 10,000ms (10 seconds)",
                 ),
               // clickObject: z
               //   .string()

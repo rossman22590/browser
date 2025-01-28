@@ -18,7 +18,7 @@ export function Browser() {
   const [sessionId, setSessionId] = React.useState<string | null>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
 
-  const { messages, input, setInput, handleSubmit, isLoading } = useChat({
+  const { messages, input, setInput, handleSubmit, isLoading, data } = useChat({
     body: {
       sessionId,
     },
@@ -33,8 +33,29 @@ export function Browser() {
       scrollRef.current = node;
       inViewRef(node);
     },
-    [inViewRef]
+    [inViewRef],
   );
+
+  // Transform messages to include status
+  const messagesWithStatus = React.useMemo(() => {
+    if (!data || !messages) return messages;
+
+    const lastData = data[data.length - 1];
+    if (!lastData) return messages;
+
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role !== "assistant") return messages;
+
+    return messages.map((message, index) => {
+      if (index === messages.length - 1 && message.role === "assistant") {
+        return {
+          ...message,
+          status: lastData,
+        };
+      }
+      return message;
+    });
+  }, [messages, data]);
 
   // Update session initialization effect
   React.useEffect(() => {
@@ -94,7 +115,7 @@ export function Browser() {
         </div>
       </header>
       <div className="h-[calc(100vh-57px)] container">
-        {messages.length === 0 ? (
+        {messagesWithStatus.length === 0 ? (
           <div className="container mx-auto flex h-full flex-col items-center justify-center gap-6 p-4">
             <h1 className="text-balance font-bold text-3xl">
               Ottogrid Browser
@@ -121,7 +142,7 @@ export function Browser() {
               <div className="flex h-full flex-col p-4">
                 <h2 className="mb-4 font-semibold text-xl">Chat Feed</h2>
                 <div className="flex-1 space-y-4 overflow-auto rounded-lg border bg-muted/50 p-4 text-sm">
-                  {messages.map((message) => (
+                  {messagesWithStatus.map((message) => (
                     <ChatMessage key={message.id} message={message} />
                   ))}
                   <div ref={composedScrollRef} />

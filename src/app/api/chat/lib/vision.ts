@@ -1,21 +1,21 @@
+import { takeScreenshot } from "@/lib/operator/actions";
+import {
+  clearDomHighlights,
+  clickElementByHighlightIndex,
+  getDomState,
+  highlightDomElements,
+} from "@/lib/operator/dom";
 import { google } from "@ai-sdk/google";
 import { generateObject, generateText } from "ai";
-import z from "zod";
 import type { Page } from "playwright-core";
-import {
-  getDomState,
-  clickElementByHighlightIndex,
-  highlightDomElements,
-  clearDomHighlights,
-} from "@/lib/operator/dom";
-import { takeScreenshot } from "@/lib/operator/actions";
+import z from "zod";
 
 /**
  * Gets coordinates for a target object in an image using vlm, doesn't work well atm.
  */
 export async function getTargetCoordinates(
   imageBuffer: Buffer,
-  targetDescription: string
+  targetDescription: string,
 ) {
   const model = google("gemini-1.5-flash-latest");
 
@@ -142,7 +142,7 @@ Sometimes there will be no clickable element that matches the instruction. In th
   const success = await clickElementByHighlightIndex(
     page,
     domState,
-    data.object.clickIndex
+    data.object.clickIndex,
   );
 
   if (!success) {

@@ -1,6 +1,6 @@
 "server only";
 import { createSession } from "@/lib/operator/session";
-import { type Browser, chromium, type Page } from "playwright-core";
+import { type Browser, type Page, chromium } from "playwright-core";
 
 interface BrowserSession {
   browser: Browser;
@@ -29,7 +29,7 @@ async function getBrowser(sessionId: string) {
 }
 
 export async function getOrCreateBrowser(
-  sessionId?: string
+  sessionId?: string,
 ): Promise<BrowserSession> {
   if (browserSession) {
     return browserSession;
