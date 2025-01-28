@@ -2,12 +2,12 @@
 
 import { closeSession, createAndGetSessionUrl } from "@/actions/session";
 import { ChatInput } from "@/components/chat-input";
+import { ChatMessage } from "@/components/chat-message";
+import { Button } from "@/components/ui/button";
 import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { cn } from "@/lib/utils";
 import { useChat } from "ai/react";
 import * as React from "react";
 import { useInView } from "react-intersection-observer";
-import { Button } from "@/components/ui/button";
 
 export function Browser() {
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -79,7 +79,7 @@ export function Browser() {
   };
 
   return (
-    <main className="flex container min-h-svh flex-col">
+    <main className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center">
           <div className="flex items-center gap-2 px-4">
@@ -93,7 +93,7 @@ export function Browser() {
           </div>
         </div>
       </header>
-      <div className="h-[calc(100vh-57px)]">
+      <div className="h-[calc(100vh-57px)] container">
         {messages.length === 0 ? (
           <div className="container mx-auto flex h-full flex-col items-center justify-center gap-6 p-4">
             <h1 className="text-balance font-bold text-3xl">
@@ -122,26 +122,7 @@ export function Browser() {
                 <h2 className="mb-4 font-semibold text-xl">Chat Feed</h2>
                 <div className="flex-1 space-y-4 overflow-auto rounded-lg border bg-muted/50 p-4 text-sm">
                   {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={cn(
-                        "flex w-full",
-                        message.role === "user"
-                          ? "justify-end"
-                          : "justify-start"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "rounded-lg px-3 py-2 shadow-sm",
-                          message.role === "user"
-                            ? "max-w-[80%] bg-primary py-2 text-primary-foreground"
-                            : "max-w-[80%] bg-background py-4"
-                        )}
-                      >
-                        {message.content}
-                      </div>
-                    </div>
+                    <ChatMessage key={message.id} message={message} />
                   ))}
                   <div ref={composedScrollRef} />
                 </div>

@@ -85,6 +85,6 @@
 
 @layer utilities {
   .container {
-    @apply px-4;
+    @apply px-4 mx-auto;
   }
 }
