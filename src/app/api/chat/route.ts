@@ -201,12 +201,13 @@ export async function POST(req: Request) {
             if (action === "click") {
               if (!clickObject)
                 return "Click object parameter required for click action";
-              await clickElementByVision(page, clickObject);
+              const result = await clickElementByVision(page, clickObject);
               // return `Successfully clicked element: ${clickObject}`;
               const { screenshot } = await takeScreenshot(page);
               return {
                 data: screenshot.data,
                 mimeType: screenshot.mimeType,
+                text: JSON.stringify(result, null, 2),
               };
             }
 
@@ -233,9 +234,18 @@ export async function POST(req: Request) {
           }
         },
         experimental_toToolResultContent(result) {
-          return typeof result === "string"
-            ? [{ type: "text", text: result }]
-            : [{ type: "image", data: result.data, mimeType: result.mimeType }];
+          if (typeof result === "string") {
+            return [{ type: "text", text: result }];
+          }
+          if (result.text) {
+            return [
+              { type: "text", text: result.text },
+              { type: "image", data: result.data, mimeType: result.mimeType },
+            ];
+          }
+          return [
+            { type: "image", data: result.data, mimeType: result.mimeType },
+          ];
         },
       },
     },
