@@ -13,10 +13,12 @@ export function Browser() {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const initialInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const chatInputRef = React.useRef<HTMLTextAreaElement | null>(null);
-  const hasInitializedRef = React.useRef(false);
   const [sessionUrl, setSessionUrl] = React.useState<string | null>(null);
   const [sessionId, setSessionId] = React.useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = React.useState(false);
   const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
+  const [isShowingInit, setIsShowingInit] = React.useState(false);
+  const [isEnding, setIsEnding] = React.useState(false);
 
   const { messages, input, setInput, handleSubmit, isLoading, data, append } =
     useChat({
@@ -58,23 +60,53 @@ export function Browser() {
     });
   }, [messages, data]);
 
-  // Update session initialization effect
-  React.useEffect(() => {
-    async function initSession() {
-      if (hasInitializedRef.current) return;
-      hasInitializedRef.current = true;
+  const initializeSession = async () => {
+    if (sessionId || isInitializing) return;
 
+    setIsInitializing(true);
+    try {
+      const { url, sessionId: id } = await createAndGetSessionUrl();
+      setSessionUrl(url);
+      setSessionId(id);
+    } catch (error) {
+      console.error("Failed to initialize session:", error);
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
+  const handleInitialSubmit = async (value: string) => {
+    setIsShowingInit(true);
+    await initializeSession();
+    setIsShowingInit(false);
+    append({
+      content: value,
+      role: "user",
+    });
+  };
+
+  const handleEndSession = async () => {
+    if (sessionId) {
+      setIsEnding(true);
       try {
-        const { url, sessionId: id } = await createAndGetSessionUrl();
-        setSessionUrl(url);
-        setSessionId(id);
+        await closeSession(sessionId);
+        setSessionId(null);
+        setSessionUrl(null);
       } catch (error) {
-        console.error("Failed to initialize session:", error);
+        console.error("Failed to end session:", error);
+      } finally {
+        setIsEnding(false);
       }
     }
+  };
 
-    initSession();
-  }, []);
+  const handleExampleClick = async (prompt: string) => {
+    await initializeSession();
+    append({
+      content: prompt,
+      role: "user",
+    });
+  };
 
   // Update auto-scroll based on whether the user is viewing the bottom
   React.useEffect(() => {
@@ -82,32 +114,11 @@ export function Browser() {
   }, [inView]);
 
   // Scroll to bottom when new messages arrive and auto-scroll is enabled
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   React.useEffect(() => {
     if (shouldAutoScroll) {
       scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, shouldAutoScroll]);
-
-  const handleEndSession = async () => {
-    if (sessionId) {
-      try {
-        await closeSession(sessionId);
-        setSessionId(null);
-        setSessionUrl(null);
-        window.location.reload();
-      } catch (error) {
-        console.error("Failed to end session:", error);
-      }
-    }
-  };
-
-  const handleExampleClick = (prompt: string) => {
-    append({
-      content: prompt,
-      role: "user",
-    });
-  };
 
   return (
     <main className="flex min-h-svh flex-col">
@@ -125,7 +136,7 @@ export function Browser() {
         </div>
       </header>
       <div className="h-[calc(100vh-57px)] container">
-        {messagesWithStatus.length === 0 ? (
+        {messagesWithStatus.length === 0 && !isShowingInit ? (
           <div className="container mx-auto flex h-full flex-col items-center justify-center gap-6 p-4">
             <h1 className="text-balance font-bold text-3xl">
               Ottogrid Browser
@@ -138,10 +149,8 @@ export function Browser() {
                 className="max-h-[200px] min-h-[100px] text-base"
                 value={input}
                 onValueChange={setInput}
-                onSubmit={() => {
-                  handleSubmit(new Event("submit"));
-                }}
-                disabled={isLoading}
+                onSubmit={handleInitialSubmit}
+                disabled={isLoading || isInitializing}
                 autoFocus
               />
               <div className="mt-8">
@@ -200,6 +209,11 @@ export function Browser() {
               <div className="flex h-full flex-col p-4">
                 <h2 className="mb-4 font-semibold text-xl">Chat Feed</h2>
                 <div className="flex-1 space-y-4 overflow-auto rounded-lg border bg-muted/50 p-4 text-sm">
+                  {isShowingInit && (
+                    <div className="rounded-lg border bg-muted px-3 py-2 text-muted-foreground">
+                      Initializing...
+                    </div>
+                  )}
                   {messagesWithStatus.map((message) => (
                     <ChatMessage key={message.id} message={message} />
                   ))}
@@ -213,7 +227,7 @@ export function Browser() {
                     className="max-h-[100px] min-h-[60px] text-base"
                     value={input}
                     onValueChange={setInput}
-                    onSubmit={() => {
+                    onSubmit={(value) => {
                       handleSubmit(new Event("submit"));
                     }}
                     disabled={isLoading}
@@ -228,9 +242,10 @@ export function Browser() {
                   <h2 className="font-semibold text-xl">Browser Panel</h2>
                   <button
                     onClick={handleEndSession}
+                    disabled={isEnding}
                     className="inline-flex h-10 items-center justify-center rounded-md px-4 py-2 font-medium text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                   >
-                    End Session
+                    {isEnding ? "Ending Session..." : "End Session"}
                   </button>
                 </div>
                 <div className="flex-1 rounded-lg border bg-muted/50 p-4">
