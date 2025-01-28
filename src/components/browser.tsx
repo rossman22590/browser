@@ -26,6 +26,7 @@ export function Browser() {
   const { messages, input, setInput, handleSubmit, isLoading, data, append } =
     useChat({
       body: { sessionId: sessionId },
+      id: sessionId || undefined,
     });
 
   // Intersection observer to check if we're scrolled to the bottom
