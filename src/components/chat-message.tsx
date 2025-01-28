@@ -45,7 +45,6 @@ export function ChatMessage({ message }: ChatMessageProps) {
         <div className="prose break-words dark:prose-invert">
           {message.content}
         </div>
-
         {message.role === "assistant" &&
           message.toolInvocations &&
           message.toolInvocations.length > 0 && (
