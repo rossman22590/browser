@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ottogrid Operator",
-  description: "Operator for the web.",
+  title: "Ottogrid Browser",
+  description: "Browser for the web.",
 };
 
 interface RootLayoutProps {

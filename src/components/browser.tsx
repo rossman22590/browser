@@ -2,29 +2,20 @@
 
 import { closeSession, createAndGetSessionUrl } from "@/actions/session";
 import { ChatInput } from "@/components/chat-input";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
 import { useChat } from "ai/react";
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useInView } from "react-intersection-observer";
 
-export function Operator() {
+export function Browser() {
+  const scrollRef = React.useRef<HTMLDivElement>(null);
   const initialInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const chatInputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const hasInitializedRef = React.useRef(false);
   const [sessionUrl, setSessionUrl] = React.useState<string | null>(null);
   const [sessionId, setSessionId] = React.useState<string | null>(null);
-
-  const router = useRouter();
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
-  const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
-  const scrollRef = React.useRef<HTMLDivElement>(null);
-
-  const hasInitializedRef = React.useRef(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
 
   const { messages, input, setInput, handleSubmit, isLoading } = useChat({
     body: {
@@ -43,8 +34,6 @@ export function Operator() {
     },
     [inViewRef]
   );
-
-  const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
 
   // Update session initialization effect
   React.useEffect(() => {
@@ -93,7 +82,7 @@ export function Operator() {
       {messages.length === 0 ? (
         <div className="container mx-auto flex h-full flex-col items-center justify-center p-4">
           <h1 className="mb-8 text-balance font-bold text-3xl">
-            Ottogrid Operator
+            Ottogrid Browser
           </h1>
           <div className="w-full max-w-2xl">
             <ChatInput

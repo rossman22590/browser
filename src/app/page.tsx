@@ -1,5 +1,5 @@
-import { Operator } from "@/components/operator";
+import { Browser } from "@/components/browser";
 
 export default function IndexPage() {
-  return <Operator />;
+  return <Browser />;
 }
