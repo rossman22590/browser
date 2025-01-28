@@ -56,9 +56,15 @@ For example, this workflow:
 2. Identify the index of the element you want to click from the screenshot
 3. Use browserAction({ action: "click", clickIndex: X }) where X is the index number
 
-Important: After any action that might change the page content (like clicking dropdowns, submitting forms, etc), 
-you should call viewAllClickableElements() again to get the updated list of elements and their new index numbers, 
-as the DOM structure may have changed.
+Important notes:
+- After any action that might change the page content (like clicking dropdowns, submitting forms, etc), 
+  you should call viewAllClickableElements() again to get the updated list of elements and their new index numbers,
+  as the DOM structure may have changed.
+- On Google search results, avoid clicking the ellipsis (...) buttons next to results as these open side panels/menus. 
+  Always click the actual link elements (titles or URLs) to navigate to the websites.
+- Scroll the page if needed to ensure elements are in view before clicking.
+- For Google search results, prefer clicking the main title link or URL link directly rather than 
+  relying on any numbered shortcuts or badges.
 
 You can also:
 - Navigate to URLs using the navigate tool
