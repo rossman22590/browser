@@ -73,7 +73,13 @@ export function Browser() {
       <div className="container h-[calc(100vh-56px)]">
         {!initialMessage ? (
           <div className="flex h-full flex-col items-center justify-center gap-6 p-4">
-            <h1 className="text-3xl font-bold">Ottogrid Browser</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">Ottogrid Browsing Agent</h1>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                preview
+              </span>
+            </div>
+
             <div className="w-full max-w-2xl">
               <ChatInput
                 ref={initialInputRef}
@@ -86,9 +92,6 @@ export function Browser() {
               />
 
               <div className="mt-8">
-                <p className="mb-4 text-center text-muted-foreground">
-                  Or try one of these examples:
-                </p>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <button
                     onClick={() =>
