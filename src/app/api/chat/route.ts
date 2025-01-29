@@ -11,7 +11,7 @@ import {
   searchGooglePage,
   takeScreenshot,
 } from "@/lib/operator/actions";
-import { getOrCreateBrowser, setSessionId } from "@/lib/operator/browser";
+import { getOrCreateBrowser } from "@/lib/operator/browser";
 import { highlightDomElements } from "@/lib/operator/dom";
 import { ratelimit } from "@/lib/upstash/upstash";
 import { sleep } from "@/lib/utils";
@@ -58,7 +58,6 @@ export async function POST(req: Request) {
 
   const model = anthropic("claude-3-5-sonnet-latest");
 
-  setSessionId(sessionId);
   // Write initial state
   let stepCount = 0;
 
@@ -95,7 +94,7 @@ export async function POST(req: Request) {
             parameters: z.object({ query: z.string() }),
             execute: async ({ query }: { query: string }) => {
               try {
-                const { page } = await getOrCreateBrowser();
+                const { page } = await getOrCreateBrowser(sessionId);
                 await searchGooglePage(page, query);
                 const { screenshot } = await takeScreenshot(page);
                 return {
@@ -140,7 +139,7 @@ export async function POST(req: Request) {
               url?: string;
             }) => {
               try {
-                const { page } = await getOrCreateBrowser();
+                const { page } = await getOrCreateBrowser(sessionId);
                 let text = "";
 
                 if (action === "url") {
@@ -190,7 +189,7 @@ export async function POST(req: Request) {
               "Highlight all clickable elements on the page with indexs and bounding boxes. Use this to see what you can click on the page, then select the index of the element you want to click.",
             parameters: z.object({}),
             execute: async () => {
-              const { page } = await getOrCreateBrowser();
+              const { page } = await getOrCreateBrowser(sessionId);
               const elements = await viewAllClickableElements(page);
               return {
                 data: elements.screenshot.data,
@@ -253,7 +252,7 @@ export async function POST(req: Request) {
             }),
             execute: async ({ action, text, amount, clickIndex, wait }) => {
               try {
-                const { page } = await getOrCreateBrowser();
+                const { page } = await getOrCreateBrowser(sessionId);
 
                 if (action === "type") {
                   if (!text)

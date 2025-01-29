@@ -7,15 +7,7 @@ interface BrowserSession {
   page: Page;
 }
 
-let browserSession: BrowserSession | null = null;
-let sessionId: string | null = null;
-
-export function setSessionId(activeSessionId: string) {
-  sessionId = activeSessionId;
-}
-export function getSessionId() {
-  return sessionId;
-}
+const sessions = new Map<string, BrowserSession>();
 
 async function getBrowser(sessionId: string) {
   const wsUrl = `wss://connect.browserbase.com?apiKey=${process.env.BROWSERBASE_API_KEY}&sessionId=${sessionId}`;
@@ -29,22 +21,14 @@ async function getBrowser(sessionId: string) {
 }
 
 export async function getOrCreateBrowser(
-  sessionId?: string
+  sessionId: string
 ): Promise<BrowserSession> {
-  if (browserSession) {
-    return browserSession;
+  const existing = sessions.get(sessionId);
+  if (existing) {
+    return existing;
   }
 
-  const activeSessionId = getSessionId();
-
-  if (activeSessionId || sessionId) {
-    const browser = await getBrowser(activeSessionId ?? sessionId!);
-    browserSession = browser;
-    return browser;
-  }
-
-  const session = await createSession();
-  const browser = await getBrowser(session.id);
-  browserSession = browser;
+  const browser = await getBrowser(sessionId);
+  sessions.set(sessionId, browser);
   return browser;
 }
