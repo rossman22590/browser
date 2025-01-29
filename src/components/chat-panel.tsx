@@ -6,6 +6,7 @@ import { useInView } from "react-intersection-observer";
 import { ChatMessage } from "@/components/chat-message";
 import { ChatInput } from "@/components/chat-input";
 import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { useIsMobile } from "@/lib/use-mobile";
 
 interface ChatPanelProps {
   sessionId: string | null;
@@ -43,6 +44,8 @@ export function ChatPanel({
     },
     [inViewRef]
   );
+
+  const isMobile = useIsMobile();
 
   // Merge `data` into the last assistant message as a status, if any
   const messagesWithStatus = React.useMemo(() => {
@@ -83,8 +86,12 @@ export function ChatPanel({
   }, [messages, shouldAutoScroll]);
 
   return (
-    <ResizablePanelGroup direction="horizontal">
-      <ResizablePanel defaultSize={30} minSize={20}>
+    <ResizablePanelGroup direction={isMobile ? "vertical" : "horizontal"}>
+      <ResizablePanel
+        defaultSize={30}
+        minSize={20}
+        className={`${isMobile ? "order-2 flex-1" : "h-auto"}`}
+      >
         <div className="flex h-full flex-col p-4">
           <h2 className="mb-4 text-xl font-semibold">Chat Feed</h2>
           <div className="flex-1 space-y-4 overflow-auto rounded-lg border bg-muted/50 p-4 text-sm">
@@ -117,8 +124,12 @@ export function ChatPanel({
         </div>
       </ResizablePanel>
 
-      <ResizablePanel defaultSize={70} minSize={40}>
-        <div className="flex h-full flex-col p-4">
+      <ResizablePanel
+        defaultSize={70}
+        minSize={40}
+        className={`${isMobile ? "order-1" : "h-auto"}`}
+      >
+        <div className={`flex flex-col p-4 ${isMobile ? "" : "h-full"}`}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold text-xl">Browser Panel</h2>
             <button
@@ -129,7 +140,11 @@ export function ChatPanel({
               {isEnding ? "Ending Session..." : "End Session"}
             </button>
           </div>
-          <div className="flex-1 rounded-lg border bg-muted/50 p-4">
+          <div
+            className={`${
+              isMobile ? "aspect-square w-full" : "flex-1"
+            } rounded-lg border bg-muted/50`}
+          >
             {isInitializing ? (
               <div className="flex h-full items-center justify-center">
                 <p className="text-muted-foreground">Loading browser...</p>
