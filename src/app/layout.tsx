@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ottogrid Browser",
+  title: "AI Tutor Browser",
   description: "Browser for the web.",
 };
 
