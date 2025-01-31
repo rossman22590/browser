@@ -17,7 +17,7 @@ interface ChatInputProps
 const ChatInput = React.forwardRef<HTMLTextAreaElement, ChatInputProps>(
   (props, forwardedRef) => {
     const {
-      value,
+      value: propValue,
       onValueChange,
       onSubmit: onSubmitProp,
       disabled,
@@ -25,30 +25,46 @@ const ChatInput = React.forwardRef<HTMLTextAreaElement, ChatInputProps>(
       ...chatInputProps
     } = props;
 
+    // Add internal state for input value
+    const [internalValue, setInternalValue] = React.useState("");
+    
+    // Use either controlled or uncontrolled value
+    const value = propValue !== undefined ? propValue : internalValue;
+
     async function onKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
       if (event.key === "Enter" && !event.shiftKey && !disabled) {
         event.preventDefault();
         const textarea = event.currentTarget;
-        const value = textarea.value.trim();
-        if (!value) return;
+        const currentValue = textarea.value.trim();
+        if (!currentValue) return;
 
         if (onSubmitProp) {
-          await onSubmitProp(value);
-          if (onValueChange) onValueChange("");
+          await onSubmitProp(currentValue);
+          setInternalValue(""); // Clear internal value
+          if (onValueChange) onValueChange(""); // Notify parent if needed
         }
       }
     }
 
     async function onSubmit() {
       if (disabled) return;
-      const textValue = typeof value === "string" ? value.trim() : "";
-      if (!textValue) return;
+      const currentValue = String(value).trim(); // Convert to string explicitly
+      if (!currentValue) return;
 
       if (onSubmitProp) {
-        await onSubmitProp(textValue);
-        if (onValueChange) onValueChange("");
+        await onSubmitProp(currentValue);
+        setInternalValue(""); // Clear internal value
+        if (onValueChange) onValueChange(""); // Notify parent if needed
       }
     }
+
+    const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newValue = event.target.value;
+      setInternalValue(newValue); // Update internal state
+      if (onValueChange) {
+        onValueChange(newValue); // Notify parent if needed
+      }
+    };
 
     return (
       <div className="relative flex w-full items-center">
@@ -60,7 +76,7 @@ const ChatInput = React.forwardRef<HTMLTextAreaElement, ChatInputProps>(
           )}
           rows={1}
           value={value}
-          onChange={(event) => onValueChange?.(event.target.value)}
+          onChange={handleChange}
           onKeyDown={onKeyDown}
           disabled={disabled}
           {...chatInputProps}
@@ -77,5 +93,7 @@ const ChatInput = React.forwardRef<HTMLTextAreaElement, ChatInputProps>(
     );
   },
 );
+
+ChatInput.displayName = "ChatInput";
 
 export { ChatInput };

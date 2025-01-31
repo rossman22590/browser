@@ -65,7 +65,7 @@ export function Browser() {
             className="h-auto p-0 text-lg hover:bg-transparent hover:text-foreground/90"
             onClick={handleEndSession}
           >
-            AI Tutor Browser
+            AI Tutor
           </Button>
         </div>
       </header>
@@ -74,22 +74,23 @@ export function Browser() {
         {!initialMessage ? (
           <div className="flex h-full flex-col items-center justify-center gap-6 p-4">
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">Ottogrid Browsing Agent</h1>
+              <h1 className="text-3xl font-bold">AI Tutor Browsing Agent</h1>
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                 preview
               </span>
             </div>
 
             <div className="w-full max-w-2xl">
-              <ChatInput
-                ref={initialInputRef}
-                placeholder="Type something here..."
-                minRows={3}
-                className="max-h-[200px] min-h-[100px] text-base"
-                onSubmit={handleInitialSubmit}
-                disabled={isInitializing}
-                autoFocus
-              />
+            <ChatInput
+  ref={initialInputRef}
+  placeholder="Type something here..."
+  minRows={3}
+  className="max-h-[200px] min-h-[100px] text-base"
+  onSubmit={handleInitialSubmit}
+  disabled={isInitializing}
+  autoFocus
+/>
+
 
               <div className="mt-8">
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
