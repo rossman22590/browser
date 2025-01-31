@@ -81,7 +81,7 @@ export function Browser() {
             </div>
 
             <div className="w-full max-w-2xl">
-            <ChatInput
+   <ChatInput
   ref={initialInputRef}
   placeholder="Type something here..."
   minRows={3}
