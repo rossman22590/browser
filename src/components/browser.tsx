@@ -65,7 +65,7 @@ export function Browser() {
             className="h-auto p-0 text-lg hover:bg-transparent hover:text-foreground/90"
             onClick={handleEndSession}
           >
-            Browser
+            AI Tutor Browser
           </Button>
         </div>
       </header>
